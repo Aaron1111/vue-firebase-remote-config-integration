@@ -72,7 +72,10 @@
                         <td>{{ param.useInAppDefault ? '(in-app default)' : param.value }}</td>
                         <td><code>{{ param.valueType || '-' }}</code></td>
                         <td>
-                            <button @click="startEdit(param)" class="btn-edit">Edit</button>
+                            <div class="actions">
+                                <button @click="startEdit(param)" class="btn-edit">Edit</button>
+                                <button @click="startDelete(param)" class="btn-delete">Delete</button>
+                            </div>
                         </td>
                     </tr>
                     <tr v-if="parameters.length === 0">
@@ -141,6 +144,28 @@ const startEdit = (param: RemoteConfigParameter) => {
     form.description = param.description || '';
     form.valueType = param.valueType;
     form.useInAppDefault = param.useInAppDefault || false;
+};
+
+const startDelete = (param: RemoteConfigParameter) => {
+    const response = confirm(`Apakah Anda yakin ingin menghapus parameter "${param.key}"?`);
+    if (response) {
+        fetch(`${API_URL}/${param.key}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    fetchParameters(); // Refresh data setelah delete
+                } else {
+                    alert('Gagal menghapus: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Gagal menghubungi server backend.' + error);
+            });
+    }
 };
 
 // Reset Form ke keadaan semula
@@ -299,6 +324,20 @@ onMounted(() => {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+}
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
 }
 
 button:disabled {
